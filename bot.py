@@ -10,8 +10,8 @@ logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=lo
 
 # 🔹 Get API Credentials from Environment Variables
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")  
-OPENAI_API_URL = os.getenv("OPENAI_API_URL")  
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_API_URL = os.getenv("OPENAI_API_URL")
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # Webhook URL for deployment
 
 # Ensure API credentials exist
@@ -37,6 +37,40 @@ fake_news_keywords = {
         "text": "🧐 Oh, you have a PhD in WhatsApp Forwarding?",
         "meme": "https://i.imgflip.com/26am.jpg"
     },
+    r"I did my own research|natural remedies|essential oils cure everything": {
+        "text": "🔬 And by research, you mean watching a YouTube video?",
+        "meme": "https://i.imgflip.com/5g9o3h.jpg"
+    },
+
+    # 3️⃣ Deepfake & AI-Generated Misinformation
+    r"AI generated|deepfake|fake video|too realistic": {
+        "text": "🤔 This looks AI-generated… because it is.",
+        "meme": "https://i.imgflip.com/4c1p.jpg"
+    },
+
+    # 4️⃣ Fake Science Claims
+    r"quantum energy|frequencies|5G is dangerous": {
+        "text": "🧠 This post used 'quantum' and 'frequencies,' so it must be legit?",
+        "meme": "https://i.imgflip.com/2h3r.jpg"
+    },
+
+    # 5️⃣ Political Misinformation
+    r"fake news|biased media|propaganda|mainstream media is lying": {
+        "text": "🤨 You sure this isn’t propaganda disguised as 'news'?",
+        "meme": "https://i.imgflip.com/3w7cva.jpg"
+    },
+
+    # 6️⃣ Old News Used As New
+    r"breaking news|shocking discovery|you won’t believe": {
+        "text": "😂 BREAKING: This event happened… 10 years ago.",
+        "meme": "https://i.imgflip.com/39t1o.jpg"
+    },
+
+    # 7️⃣ Clickbait & Fake News
+    r"scientists hate this|banned information|they don’t want you to know": {
+        "text": "😆 Clickbait title: 'Scientists HATE this simple trick!'",
+        "meme": "https://i.imgflip.com/30b1gx.jpg"
+    },
 }
 
 # 🔹 Function to Check with Custom AI API
@@ -47,7 +81,7 @@ async def check_fake_news_with_api(text):
             "Content-Type": "application/json"
         }
         payload = {
-            "model": "gpt-3.5-turbo",  
+            "model": "gpt-3.5-turbo",  # Adjust this based on your API provider
             "messages": [{"role": "user", "content": f"Is the following statement misinformation? Provide a short explanation:\n{text}"}]
         }
 
