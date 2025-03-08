@@ -2,4 +2,5 @@ python-telegram-bot[webhooks]
 requests
 flask
 openai
+waitress
 
