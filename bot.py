@@ -10,8 +10,9 @@ logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=lo
 
 # 🔹 Get API Credentials from Environment Variables
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")  # API Key
-OPENAI_API_URL = os.getenv("OPENAI_API_URL")  # API Endpoint
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")  
+OPENAI_API_URL = os.getenv("OPENAI_API_URL")  
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # Webhook URL for deployment
 
 # Ensure API credentials exist
 if not TELEGRAM_TOKEN:
@@ -36,40 +37,6 @@ fake_news_keywords = {
         "text": "🧐 Oh, you have a PhD in WhatsApp Forwarding?",
         "meme": "https://i.imgflip.com/26am.jpg"
     },
-    r"I did my own research|natural remedies|essential oils cure everything": {
-        "text": "🔬 And by research, you mean watching a YouTube video?",
-        "meme": "https://i.imgflip.com/5g9o3h.jpg"
-    },
-
-    # 3️⃣ Deepfake & AI-Generated Misinformation
-    r"AI generated|deepfake|fake video|too realistic": {
-        "text": "🤔 This looks AI-generated… because it is.",
-        "meme": "https://i.imgflip.com/4c1p.jpg"
-    },
-
-    # 4️⃣ Fake Science Claims
-    r"quantum energy|frequencies|5G is dangerous": {
-        "text": "🧠 This post used 'quantum' and 'frequencies,' so it must be legit?",
-        "meme": "https://i.imgflip.com/2h3r.jpg"
-    },
-
-    # 5️⃣ Political Misinformation
-    r"fake news|biased media|propaganda|mainstream media is lying": {
-        "text": "🤨 You sure this isn’t propaganda disguised as 'news'?",
-        "meme": "https://i.imgflip.com/3w7cva.jpg"
-    },
-
-    # 6️⃣ Old News Used As New
-    r"breaking news|shocking discovery|you won’t believe": {
-        "text": "😂 BREAKING: This event happened… 10 years ago.",
-        "meme": "https://i.imgflip.com/39t1o.jpg"
-    },
-
-    # 7️⃣ Clickbait & Fake News
-    r"scientists hate this|banned information|they don’t want you to know": {
-        "text": "😆 Clickbait title: 'Scientists HATE this simple trick!'",
-        "meme": "https://i.imgflip.com/30b1gx.jpg"
-    },
 }
 
 # 🔹 Function to Check with Custom AI API
@@ -80,7 +47,7 @@ async def check_fake_news_with_api(text):
             "Content-Type": "application/json"
         }
         payload = {
-            "model": "gpt-3.5-turbo",  # Adjust this based on your API provider
+            "model": "gpt-3.5-turbo",  
             "messages": [{"role": "user", "content": f"Is the following statement misinformation? Provide a short explanation:\n{text}"}]
         }
 
@@ -102,23 +69,17 @@ async def detect_fake_news(update: Update, context: CallbackContext) -> None:
 
     for pattern, response in fake_news_keywords.items():
         if re.search(pattern, text):
-            # Get AI analysis
             ai_analysis = await check_fake_news_with_api(text)
-
             try:
-                # Try to send the meme image with AI analysis
                 await update.message.reply_photo(
                     photo=response["meme"], 
                     caption=f"{response['text']}\n\n🧠 AI Analysis:\n{ai_analysis}"
                 )
             except Exception as e:
-                # If the meme fails, send only text
                 await update.message.reply_text(f"{response['text']}\n\n🧠 AI Analysis:\n{ai_analysis}")
                 logging.error(f"Error sending meme for '{text}': {e}")
-
             return
 
-    # If no keyword is matched, just return AI analysis
     ai_analysis = await check_fake_news_with_api(text)
     await update.message.reply_text(f"🧠 AI Analysis:\n{ai_analysis}")
 
@@ -133,8 +94,9 @@ async def start(update: Update, context: CallbackContext) -> None:
 async def error_handler(update: object, context: CallbackContext) -> None:
     logging.error(f"Update {update} caused error {context.error}")
 
-# 🔹 Main Function
+# 🔹 Main Function (Webhooks Version)
 def main():
+    # ✅ Correctly Define `app` Before Webhooks
     app = Application.builder().token(TELEGRAM_TOKEN).build()
 
     # Add Handlers
@@ -142,15 +104,13 @@ def main():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, detect_fake_news))
     app.add_error_handler(error_handler)
 
-    # Run Bot
-    WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # Add this in Render environment variables
-
-app.run_webhook(
-    listen="0.0.0.0",
-    port=8443,
-    url_path=TELEGRAM_TOKEN,
-    webhook_url=f"{WEBHOOK_URL}/{TELEGRAM_TOKEN}"
-)
+    # ✅ Use Webhooks Instead of Polling
+    app.run_webhook(
+        listen="0.0.0.0",
+        port=8443,
+        url_path=TELEGRAM_TOKEN,
+        webhook_url=f"{WEBHOOK_URL}/{TELEGRAM_TOKEN}"
+    )
 
 if __name__ == "__main__":
     main()
