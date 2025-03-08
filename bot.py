@@ -1,5 +1,5 @@
 import os
-import openai
+import requests
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
 import re
@@ -8,23 +8,16 @@ import logging
 # 🔹 Enable Logging
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
 
-# 🔹 Get Tokens from Environment Variables
+# 🔹 Get API Credentials from Environment Variables
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")  # API Key
+OPENAI_API_URL = os.getenv("OPENAI_API_URL")  # API Endpoint
 
-# Ensure tokens exist
+# Ensure API credentials exist
 if not TELEGRAM_TOKEN:
     raise ValueError("Missing TELEGRAM_BOT_TOKEN environment variable!")
-if not OPENAI_API_KEY:
-    raise ValueError("Missing OPENAI_API_KEY environment variable!")
-
-# Set up OpenAI API
-OPENAI_API_URL = os.getenv("OPENAI_API_URL")
-
-client = openai.OpenAI(
-    api_key=OPENAI_API_KEY,
-    base_url=OPENAI_API_URL 
-)
+if not OPENAI_API_KEY or not OPENAI_API_URL:
+    raise ValueError("Missing OPENAI_API_KEY or OPENAI_API_URL environment variable!")
 
 # 🔹 Define Fake News Keywords and Responses (Verified Meme Links)
 fake_news_keywords = {
@@ -79,16 +72,28 @@ fake_news_keywords = {
     },
 }
 
-# 🔹 Function to Check with OpenAI (Updated for v1 API)
-async def check_fake_news_with_openai(text):
+# 🔹 Function to Check with Custom AI API
+async def check_fake_news_with_api(text):
     try:
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": f"Is the following statement misinformation? Provide a short explanation:\n{text}"}]
-        )
-        return response.choices[0].message.content
+        headers = {
+            "Authorization": f"Bearer {OPENAI_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "model": "gpt-3.5-turbo",  # Adjust this based on your API provider
+            "messages": [{"role": "user", "content": f"Is the following statement misinformation? Provide a short explanation:\n{text}"}]
+        }
+
+        response = requests.post(OPENAI_API_URL, json=payload, headers=headers)
+        response_json = response.json()
+
+        if "choices" in response_json and response_json["choices"]:
+            return response_json["choices"][0]["message"]["content"]
+        else:
+            return "⚠️ AI analysis failed. The response was unexpected."
+
     except Exception as e:
-        logging.error(f"OpenAI API error: {e}")
+        logging.error(f"Custom API error: {e}")
         return "⚠️ Error retrieving AI analysis."
 
 # 🔹 Function to Detect Fake News and Get AI Feedback
@@ -98,7 +103,7 @@ async def detect_fake_news(update: Update, context: CallbackContext) -> None:
     for pattern, response in fake_news_keywords.items():
         if re.search(pattern, text):
             # Get AI analysis
-            ai_analysis = await check_fake_news_with_openai(text)
+            ai_analysis = await check_fake_news_with_api(text)
 
             try:
                 # Try to send the meme image with AI analysis
@@ -114,7 +119,7 @@ async def detect_fake_news(update: Update, context: CallbackContext) -> None:
             return
 
     # If no keyword is matched, just return AI analysis
-    ai_analysis = await check_fake_news_with_openai(text)
+    ai_analysis = await check_fake_news_with_api(text)
     await update.message.reply_text(f"🧠 AI Analysis:\n{ai_analysis}")
 
 # 🔹 Start Command
