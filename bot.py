@@ -1,4 +1,5 @@
 import os
+import openai
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
 import re
@@ -7,15 +8,20 @@ import logging
 # 🔹 Enable Logging
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
 
-# 🔹 Get Bot Token from Environment Variables
+# 🔹 Get Tokens from Environment Variables
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-
-# Ensure token exists
-if not TOKEN:
+# Ensure tokens exist
+if not TELEGRAM_TOKEN:
     raise ValueError("Missing TELEGRAM_BOT_TOKEN environment variable!")
+if not OPENAI_API_KEY:
+    raise ValueError("Missing OPENAI_API_KEY environment variable!")
 
-# 🔹 Define Fake News Keywords and Responses
+# Set up OpenAI API
+openai.api_key = OPENAI_API_KEY
+
+# 🔹 Define Fake News Keywords and Responses (Verified Meme Links)
 fake_news_keywords = {
     # 1️⃣ Conspiracy Theories
     r"aliens|UFO|extraterrestrial": {
@@ -68,22 +74,43 @@ fake_news_keywords = {
     },
 }
 
-# 🔹 Function to Detect Fake News
+# 🔹 Function to Check with OpenAI
+async def check_fake_news_with_openai(text):
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[{"role": "user", "content": f"Is the following statement misinformation? Provide a short explanation:\n{text}"}]
+        )
+        return response["choices"][0]["message"]["content"]
+    except Exception as e:
+        logging.error(f"OpenAI API error: {e}")
+        return "⚠️ Error retrieving AI analysis."
+
+# 🔹 Function to Detect Fake News and Get AI Feedback
 async def detect_fake_news(update: Update, context: CallbackContext) -> None:
     text = update.message.text.lower()
 
     for pattern, response in fake_news_keywords.items():
         if re.search(pattern, text):
+            # Get AI analysis
+            ai_analysis = await check_fake_news_with_openai(text)
+
             try:
-                # Try to send the meme image with the caption
-                await update.message.reply_photo(photo=response["meme"], caption=response["text"])
+                # Try to send the meme image with AI analysis
+                await update.message.reply_photo(
+                    photo=response["meme"], 
+                    caption=f"{response['text']}\n\n🧠 AI Analysis:\n{ai_analysis}"
+                )
             except Exception as e:
-                # If the meme fails to load, send text instead
-                await update.message.reply_text(f"⚠️ Error sending meme. Here’s the text instead:\n\n{response['text']}")
+                # If the meme fails, send only text
+                await update.message.reply_text(f"{response['text']}\n\n🧠 AI Analysis:\n{ai_analysis}")
                 logging.error(f"Error sending meme for '{text}': {e}")
+
             return
 
-    await update.message.reply_text("🤖 No fake news detected! Keep spreading facts.")
+    # If no keyword is matched, just return AI analysis
+    ai_analysis = await check_fake_news_with_openai(text)
+    await update.message.reply_text(f"🧠 AI Analysis:\n{ai_analysis}")
 
 # 🔹 Start Command
 async def start(update: Update, context: CallbackContext) -> None:
@@ -98,7 +125,7 @@ async def error_handler(update: object, context: CallbackContext) -> None:
 
 # 🔹 Main Function
 def main():
-    app = Application.builder().token(TOKEN).build()
+    app = Application.builder().token(TELEGRAM_TOKEN).build()
 
     # Add Handlers
     app.add_handler(CommandHandler("start", start))
