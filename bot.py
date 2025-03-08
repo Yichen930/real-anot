@@ -8,7 +8,8 @@ import logging
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
 
 # 🔹 Get Bot Token from Environment Variables
-TOKEN = os.getenv("7661066348:AAGg5mRhCFRagqjyswHRVDgtHEBuBqut5gw")
+
+TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
 # Ensure token exists
 if not TOKEN:
