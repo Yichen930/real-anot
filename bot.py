@@ -4,7 +4,7 @@ import logging
 import json
 import asyncio
 import re
-from openai import OpenAI
+from openai import AsyncOpenAI
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
 
@@ -25,7 +25,7 @@ if not WEBHOOK_URL: missing_vars.append("WEBHOOK_URL")
 if missing_vars:
     raise ValueError(f"❌ Missing required environment variables: {', '.join(missing_vars)}")
 
-client = OpenAI(api_key=OPENAI_API_KEY)
+client = AsyncOpenAI(api_key=OPENAI_API_KEY)
 
 # Meme responses mapped to regex-detected categories
 fake_news_keywords = {
@@ -54,7 +54,7 @@ REPORTS_FILE = "reports.json"
 # AI analyzes the text but does not pick the category
 async def analyze_news_with_ai(text):
     try:
-        response = client.chat.completions.create(
+        response = await client.chat.completions.create( 
             model="gpt-4o",
             messages=[
                 {"role": "system", "content": 
@@ -92,6 +92,11 @@ async def report_false_positive(update: Update, context: CallbackContext) -> Non
     if not user_text:
         await update.message.reply_text("⚠️ Please provide the misclassified statement. Example:\n/report The government is hiding UFOs!")
         return
+        
+    report_entry = {
+        "user": update.message.from_user.username or update.message.from_user.id, 
+        "message": user_text
+    }
 
     try:
         with open(REPORTS_FILE, "r") as file:
@@ -115,7 +120,7 @@ async def start(update: Update, context: CallbackContext) -> None:
     )
 
 # Main function (runs webhook server without Flask)
-def main():
+async def main():
     app = Application.builder().token(TELEGRAM_TOKEN).build()
 
     # Add handlers
@@ -124,7 +129,7 @@ def main():
     app.add_handler(CommandHandler("report", report_false_positive))
 
     # Set Webhook
-   await app.bot.set_webhook(f"{WEBHOOK_URL}/{TELEGRAM_TOKEN}")
+    await app.bot.set_webhook(f"{WEBHOOK_URL}/{TELEGRAM_TOKEN}")
 
     # Run webhook server
     await app.run_webhook(
