@@ -89,14 +89,12 @@ async def analyze_news_with_ai(text):
 async def detect_fake_news(update: Update, context: CallbackContext) -> None:
     text = update.message.text.lower()
 
-    for pattern, (category, meme_url) in fake_news_keywords.items():
+    for pattern, (category, meme_url, caption) in fake_news_keywords.items():
         if re.search(pattern, text, re.IGNORECASE):
-            ai_analysis = await analyze_news_with_ai(text)
-            await update.message.reply_photo(photo=meme_url, caption=f"🧠 **Category:** {category}\n\n{ai_analysis}")
+            await update.message.reply_photo(photo=meme_url, caption=f"🧠 **Category:** {category}\n\n{caption}")
             return
 
-    ai_analysis = await analyze_news_with_ai(text)
-    await update.message.reply_text(f"✅ No fake news category detected.\n\n🧠 AI Analysis:\n{ai_analysis}")
+    await update.message.reply_text("✅ No fake news category detected.")
 
 # Allow users to report misclassifications
 async def report_false_positive(update: Update, context: CallbackContext) -> None:
