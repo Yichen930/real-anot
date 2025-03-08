@@ -45,18 +45,21 @@ async def categorize_news_with_ai(text):
         response = client.chat.completions.create(
             model="gpt-4o",
             messages=[
-                {"role": "system", "content": "Analyze this text and classify it into one of these categories:\n"
-                                              "1. Conspiracy Theory\n"
-                                              "2. Fake Health News\n"
-                                              "3. AI-Generated Misinformation\n"
-                                              "4. Fake Science Claim\n"
-                                              "5. Political Misinformation\n"
-                                              "6. Old News Reused\n"
-                                              "7. Clickbait & Fake News\n"
-                                              "If it does not fit any category, reply with: 'Not Fake News'."},
+                {"role": "system", "content": 
+                    "You are an expert fact-checker. "
+                    "Your job is to analyze the input and strictly classify it into one of these categories:\n"
+                    "1. Conspiracy Theory\n"
+                    "2. Fake Health News\n"
+                    "3. AI-Generated Misinformation\n"
+                    "4. Fake Science Claim\n"
+                    "5. Political Misinformation\n"
+                    "6. Old News Reused\n"
+                    "7. Clickbait & Fake News\n"
+                    "If it is real news or factual, reply with: 'Not Fake News'.\n"
+                    "Do NOT say 'Not Fake News' unless you are 100% sure the statement is factual and backed by evidence."},
                 {"role": "user", "content": text}
             ],
-            temperature=0.7
+            temperature=0.3  # Lower temperature for more consistent responses
         )
 
         category = response.choices[0].message.content.strip()
