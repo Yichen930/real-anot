@@ -31,35 +31,36 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 fake_news_keywords = {
     # 🔹 Conspiracy Theories
     r"\b(aliens?|UFO|extraterrestrial|area[\s-]?51|reptilian|illuminati|new[\s-]?world[\s-]?order|secret societies|ancient aliens|lizard people)\b": 
-        ("Conspiracy Theory", "https://i.imgflip.com/6ncq0g.jpg", "👽 So… aliens did this too? Classic!"),
+        ("Conspiracy Theory", "https://i.imgur.com/dFA4l4D.jpg", "👽 So… aliens did this too? Classic!"),
 
     r"\b(government secret|deep[\s-]?state|hidden[\s-]?agenda|they don'?t want you to know|cover[\s-]?up|black[\s-]?ops|elites are controlling us|shadow government|secret documents leaked)\b": 
-        ("Conspiracy Theory", "https://i.imgflip.com/6ncq0t.jpg", "🚨 Another 'They don't want you to know this' moment. 🤔"),
+        ("Conspiracy Theory", "https://i.imgur.com/QcU3zmd.jpg", "🚨 Another 'They don't want you to know this' moment. 🤔"),
 
     # 🔹 Fake Health News
     r"\b(vaccines? (cause|lead to|are linked to) autism|anti[\s-]?vax|vaccine[\s-]?hoax|big[\s-]?pharma is lying|natural[\s-]?medicine is better than|essential oils cure everything|fluoride is dangerous|detox can remove toxins|miracle cure|doctors are lying|homeopathy works|covid vaccine is dangerous|miracle supplement|healing frequencies)\b": 
-        ("Fake Health News", "https://i.imgflip.com/6ncq1p.jpg", "🧐 Oh, you have a PhD in WhatsApp Forwarding?"),
+        ("Fake Health News", "https://i.imgur.com/J8dsqA7.jpg", "🧐 Oh, you have a PhD in WhatsApp Forwarding?"),
 
     # 🔹 AI-Generated Misinformation
     r"\b(this video proves|AI generated|deepfake|fake video|too realistic to be fake|manipulated[\s-]?media|synthetic[\s-]?content|robotic behavior|faked footage|fake interview|this video is 100% real|politician is a robot|robot president|not human|CGI proof)\b": 
-        ("AI-Generated Misinformation", "https://i.imgflip.com/6nco1c.jpg", "🤖 This AI-generated content looks… suspicious."),
+        ("AI-Generated Misinformation", "https://i.imgur.com/X4TLm2F.jpg", "🤖 This AI-generated content looks… suspicious."),
 
     # 🔹 Fake Science Claims
     r"\b(quantum[\s-]?energy|frequencies|vibrations|5G is dangerous|radiation[\s-]?harm|electromagnetic[\s-]?weapon|waves affect the brain|phone signals cause cancer|scientists are hiding the truth|science is a lie|5G towers are harming people|microwave radiation|cell towers emit deadly radiation|crystal healing|energy fields)\b": 
-        ("Fake Science Claim", "https://i.imgflip.com/6ncocc.jpg", "🧠 'Quantum' and 'frequencies' = must be real science, right?"),
+        ("Fake Science Claim", "https://i.imgur.com/rIXswmV.jpg", "🧠 'Quantum' and 'frequencies' = must be real science, right?"),
 
     # 🔹 Political Misinformation
     r"\b(fake[\s-]?news|biased[\s-]?media|propaganda|mainstream[\s-]?media is lying|rigged[\s-]?election|false[\s-]?flag|election fraud|corrupt politicians|media blackout|cover-up by officials|votes were changed|ballots disappeared|illegal voting|stolen election|voter manipulation)\b": 
-        ("Political Misinformation", "https://i.imgflip.com/6ncocz.jpg", "🤨 Are you sure this isn’t propaganda?"),
+        ("Political Misinformation", "https://i.imgur.com/Gzx3VJ9.jpg", "🤨 Are you sure this isn’t propaganda?"),
 
     # 🔹 Old News Reused
     r"\b(breaking[\s-]?news|shocking[\s-]?discovery|you won'?t believe|history[\s-]?rewritten|exposed after years|from [0-9]{4}|old report|10 years ago today|rediscovered|found after decades|this resurfaced|this happened years ago|historical coverup|resurfaced documents)\b": 
-        ("Old News Reused", "https://i.imgflip.com/6ncq2h.jpg", "😂 BREAKING: This event happened… a decade ago."),
+        ("Old News Reused", "https://i.imgur.com/cEVow3R.jpg", "😂 BREAKING: This event happened… a decade ago."),
 
     # 🔹 Clickbait & Fake News
     r"\b(scientists hate this|banned[\s-]?information|they don'?t want you to know|top[\s-]?secret[\s-]?files|hidden[\s-]?truth|wake up[\s-]?sheeple|shocking truth|forbidden knowledge|nobody is talking about this|click here to find out|you won'?t believe|secret discovery|massive coverup|mystery solved|revealed at last|exposed truth|insider information)\b": 
-        ("Clickbait & Fake News", "https://i.imgflip.com/6ncp0x.jpg", "😆 Clickbait alert! 'Scientists HATE this one trick!'"),
+        ("Clickbait & Fake News", "https://i.imgur.com/WI3t5pm.jpg", "😆 Clickbait alert! 'Scientists HATE this one trick!'"),
 }
+
 
 REPORTS_FILE = "reports.json"
 
