@@ -29,38 +29,25 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 
 # Meme responses mapped to regex-detected categories
 fake_news_keywords = {
-    # 🔹 Conspiracy Theories
-    r"\b(aliens?|UFO|extraterrestrial|area[\s-]?51|reptilian|illuminati|new[\s-]?world[\s-]?order|secret societies|ancient aliens|lizard people)\b": 
-        ("Conspiracy Theory", "https://i.imgur.com/dFA4l4D.jpg", "👽 So… aliens did this too? Classic!"),
-
-    r"\b(government secret|deep[\s-]?state|hidden[\s-]?agenda|they don'?t want you to know|cover[\s-]?up|black[\s-]?ops|elites are controlling us|shadow government|secret documents leaked)\b": 
-        ("Conspiracy Theory", "https://i.imgur.com/QcU3zmd.jpg", "🚨 Another 'They don't want you to know this' moment. 🤔"),
-
-    # 🔹 Fake Health News
-    r"\b(vaccines? (cause|lead to|are linked to) autism|anti[\s-]?vax|vaccine[\s-]?hoax|big[\s-]?pharma is lying|natural[\s-]?medicine is better than|essential oils cure everything|fluoride is dangerous|detox can remove toxins|miracle cure|doctors are lying|homeopathy works|covid vaccine is dangerous|miracle supplement|healing frequencies)\b": 
-        ("Fake Health News", "https://i.imgur.com/J8dsqA7.jpg", "🧐 Oh, you have a PhD in WhatsApp Forwarding?"),
-
-    # 🔹 AI-Generated Misinformation
+    r"\b(aliens?|UFO|extraterrestrial|area[\s-]?51|reptilian|illuminati|new[\s-]?world[\s-]?order)\b": 
+        ("Conspiracy Theory", "https://i.imgflip.com/1bij.jpg", "👽 So… aliens did this too? Classic!"),
+    r"\b(government secret|deep[\s-]?state|hidden[\s-]?agenda|they don'?t want you to know|cover[\s-]?up|black[\s-]?ops)\b": 
+        ("Conspiracy Theory", "https://i.imgflip.com/4t0m5.jpg", "🚨 Another 'They don't want you to know this' moment. 🤔"),
+    r"\b(trust me, I'?m a doctor|miracle cure|big[\s-]?pharma|natural[\s-]?medicine|homeopathy|detox|superfood|cancer[\s-]?cure)\b": 
+        ("Fake Health News", "https://i.imgflip.com/26am.jpg", "🧐 Oh, you have a PhD in WhatsApp Forwarding?"),
+    r"\b(I did my own research|essential oils|herbal remedy|anti[\s-]?vax|vaccine[\s-]?hoax|fluoride is dangerous)\b": 
+        ("Fake Health News", "https://tse3.mm.bing.net/th?id=OIP.tpCX_jOlofnIWtIBdV4fOQHaGm&pid=Api.jpg", "🧐 Oh, you have a PhD in WhatsApp Forwarding?"),
     r"\b(this video proves|AI generated|deepfake|fake video|too realistic to be fake|manipulated[\s-]?media|synthetic[\s-]?content|robotic behavior|faked footage|fake interview|this video is 100% real|politician is a robot|robot president|not human|CGI proof)\b": 
-        ("AI-Generated Misinformation", "https://i.imgur.com/X4TLm2F.jpg", "🤖 This AI-generated content looks… suspicious."),
-
-    # 🔹 Fake Science Claims
+        ("AI-Generated Misinformation", "https://s3.ifanr.com/wp-content/uploads/2023/03/po3.jpg!720", "🤖 This AI-generated content looks… suspicious."),
     r"\b(quantum[\s-]?energy|frequencies|vibrations|5G is dangerous|radiation[\s-]?harm|electromagnetic[\s-]?weapon|waves affect the brain|phone signals cause cancer|scientists are hiding the truth|science is a lie|5G towers are harming people|microwave radiation|cell towers emit deadly radiation|crystal healing|energy fields)\b": 
-        ("Fake Science Claim", "https://i.imgur.com/rIXswmV.jpg", "🧠 'Quantum' and 'frequencies' = must be real science, right?"),
-
-    # 🔹 Political Misinformation
+        ("Fake Science Claim", "https://blogs.prio.org/wp-content/uploads/2017/05/34079489601_0af732b619_k.jpg", "🧠 'Quantum' and 'frequencies' = must be real science, right?"),
     r"\b(fake[\s-]?news|biased[\s-]?media|propaganda|mainstream[\s-]?media is lying|rigged[\s-]?election|false[\s-]?flag|election fraud|corrupt politicians|media blackout|cover-up by officials|votes were changed|ballots disappeared|illegal voting|stolen election|voter manipulation)\b": 
-        ("Political Misinformation", "https://i.imgur.com/Gzx3VJ9.jpg", "🤨 Are you sure this isn’t propaganda?"),
-
-    # 🔹 Old News Reused
-    r"\b(breaking[\s-]?news|shocking[\s-]?discovery|you won'?t believe|history[\s-]?rewritten|exposed after years|from [0-9]{4}|old report|10 years ago today|rediscovered|found after decades|this resurfaced|this happened years ago|historical coverup|resurfaced documents)\b": 
-        ("Old News Reused", "https://i.imgur.com/cEVow3R.jpg", "😂 BREAKING: This event happened… a decade ago."),
-
-    # 🔹 Clickbait & Fake News
-    r"\b(scientists hate this|banned[\s-]?information|they don'?t want you to know|top[\s-]?secret[\s-]?files|hidden[\s-]?truth|wake up[\s-]?sheeple|shocking truth|forbidden knowledge|nobody is talking about this|click here to find out|you won'?t believe|secret discovery|massive coverup|mystery solved|revealed at last|exposed truth|insider information)\b": 
-        ("Clickbait & Fake News", "https://i.imgur.com/WI3t5pm.jpg", "😆 Clickbait alert! 'Scientists HATE this one trick!'"),
+        ("Political Misinformation", "https://misinforeview.hks.harvard.edu/wp-content/uploads/2021/08/fig1_new-1536x1384.png", "🤨 Are you sure this isn’t propaganda?"),
+    r"\b(breaking[\s-]?news|shocking[\s-]?discovery|you won'?t believe|history[\s-]?rewritten|exposed after years)\b": 
+        ("Old News Reused", "https://i.imgflip.com/39t1o.jpg", "😂 BREAKING: This event happened… a decade ago."),
+     r"\b(scientists hate this|banned[\s-]?information|they don'?t want you to know|top[\s-]?secret[\s-]?files|hidden[\s-]?truth|wake up[\s-]?sheeple|shocking truth|forbidden knowledge|nobody is talking about this|click here to find out|you won'?t believe|secret discovery|massive coverup|mystery solved|revealed at last|exposed truth|insider information)\b": 
+        ("Clickbait & Fake News", "https://i.imgflip.com/30b1gx.jpg", "😆 Clickbait alert! 'Scientists HATE this one trick!'"),
 }
-
 
 REPORTS_FILE = "reports.json"
 
@@ -89,12 +76,14 @@ async def analyze_news_with_ai(text):
 async def detect_fake_news(update: Update, context: CallbackContext) -> None:
     text = update.message.text.lower()
 
-    for pattern, (category, meme_url, caption) in fake_news_keywords.items():
+    for pattern, (category, meme_url) in fake_news_keywords.items():
         if re.search(pattern, text, re.IGNORECASE):
-            await update.message.reply_photo(photo=meme_url, caption=f"🧠 **Category:** {category}\n\n{caption}")
+            ai_analysis = await analyze_news_with_ai(text)
+            await update.message.reply_photo(photo=meme_url, caption=f"🧠 **Category:** {category}\n\n{ai_analysis}")
             return
 
-    await update.message.reply_text("✅ No fake news category detected.")
+    ai_analysis = await analyze_news_with_ai(text)
+    await update.message.reply_text(f"✅ No fake news category detected.\n\n🧠 AI Analysis:\n{ai_analysis}")
 
 # Allow users to report misclassifications
 async def report_false_positive(update: Update, context: CallbackContext) -> None:
