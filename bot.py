@@ -1,15 +1,18 @@
+import os
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
 import re
 import logging
 
-# 🔹 Enable Logging for Debugging
-logging.basicConfig(
-    format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO
-)
+# 🔹 Enable Logging
+logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
 
-# 🔹 Replace with your BotFather Token
-TOKEN = "7661066348:AAGg5mRhCFRagqjyswHRVDgtHEBuBqut5gw"
+# 🔹 Get Bot Token from Environment Variables
+TOKEN = os.getenv("7661066348:AAGg5mRhCFRagqjyswHRVDgtHEBuBqut5gw")
+
+# Ensure token exists
+if not TOKEN:
+    raise ValueError("Missing TELEGRAM_BOT_TOKEN environment variable!")
 
 # 🔹 Define Fake News Keywords and Responses
 fake_news_keywords = {
@@ -50,13 +53,13 @@ fake_news_keywords = {
         "text": "🤨 You sure this isn’t propaganda disguised as 'news'?",
         "meme": "https://i.imgflip.com/3w7cva.jpg"
     },
-    
+
     # 6️⃣ Old News Used As New
     r"breaking news|shocking discovery|you won’t believe": {
         "text": "😂 BREAKING: This event happened… 10 years ago.",
         "meme": "https://i.imgflip.com/39t1o.jpg"
     },
-    
+
     # 7️⃣ Clickbait & Fake News
     r"scientists hate this|banned information|they don’t want you to know": {
         "text": "😆 Clickbait title: 'Scientists HATE this simple trick!'",
@@ -70,8 +73,13 @@ async def detect_fake_news(update: Update, context: CallbackContext) -> None:
 
     for pattern, response in fake_news_keywords.items():
         if re.search(pattern, text):
-            # Send only the meme image with the caption (no URLs)
-            await update.message.reply_photo(response["meme"], caption=response["text"])
+            try:
+                # Try to send the meme image with the caption
+                await update.message.reply_photo(photo=response["meme"], caption=response["text"])
+            except Exception as e:
+                # If the meme fails to load, send text instead
+                await update.message.reply_text(f"⚠️ Error sending meme. Here’s the text instead:\n\n{response['text']}")
+                logging.error(f"Error sending meme for '{text}': {e}")
             return
 
     await update.message.reply_text("🤖 No fake news detected! Keep spreading facts.")
@@ -80,8 +88,7 @@ async def detect_fake_news(update: Update, context: CallbackContext) -> None:
 async def start(update: Update, context: CallbackContext) -> None:
     await update.message.reply_text(
         "Welcome to the Fake News Meme Bot! 🤖\n"
-        "Send me a message, and I'll check if it's fake news.\n"
-        "Try words like 'aliens', '5G', 'deepfake' to test me!"
+        "Send me a message, and I'll check if it's fake news."
     )
 
 # 🔹 Error Handling
