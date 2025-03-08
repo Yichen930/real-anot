@@ -73,24 +73,22 @@ fake_news_keywords = {
     },
 }
 
-from openai import OpenAI  # ✅ 使用 OpenAI 官方 SDK
+from openai import OpenAI  # ✅ 使用 OpenAI SDK
 
 # 🔹 初始化 OpenAI 客户端
 client = OpenAI(
-    base_url=os.getenv("OPENAI_API_URL"),  # 你的 API URL
-    api_key=os.getenv("OPENAI_API_KEY")   # 你的 API Key
+    base_url=os.getenv("OPENAI_API_URL", "https://chatapi.littlewheat.com/v1"),  # ✅ 默认正确路径
+    api_key=os.getenv("OPENAI_API_KEY")
 )
 
 async def check_fake_news_with_api(text):
     try:
-        # ✅ 发送请求给 OpenAI
         response = client.chat.completions.create(
-            model="gpt-4o-mini",  # 你用的 API 可能不需要这个字段
-            messages=[{"role": "user", "content": f"Is the following statement misinformation? Provide a short explanation:\n{text}"}],
+            model="gpt-4o-mini",  
+            messages=[{"role": "user", "content": f"Is this misinformation? {text}"}],
             temperature=0.7
         )
 
-        # ✅ 解析 OpenAI API 返回的文本
         return response.choices[0].message.content
 
     except Exception as e:
