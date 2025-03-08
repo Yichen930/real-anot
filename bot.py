@@ -143,7 +143,14 @@ def main():
     app.add_error_handler(error_handler)
 
     # Run Bot
-    app.run_polling()
+    WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # Add this in Render environment variables
+
+app.run_webhook(
+    listen="0.0.0.0",
+    port=8443,
+    url_path=TELEGRAM_TOKEN,
+    webhook_url=f"{WEBHOOK_URL}/{TELEGRAM_TOKEN}"
+)
 
 if __name__ == "__main__":
     main()
