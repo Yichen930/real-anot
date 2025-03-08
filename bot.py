@@ -6,6 +6,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 import logging
 import json
 from flask import Flask, request
+from waitress import serve  # Production-ready WSGI server
 
 # Enable logging
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
@@ -26,7 +27,7 @@ if missing_vars:
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
-# Meme responses mapped to categories
+# Meme responses mapped to AI-detected categories
 category_to_meme = {
     "Conspiracy Theory": "https://i.imgflip.com/1bij.jpg",
     "Fake Health News": "https://i.imgflip.com/26am.jpg",
@@ -125,7 +126,7 @@ def webhook():
         logging.error(f"❌ Webhook Error: {e}")
         return "Webhook processing failed", 500
 
-# Start Webhook
+# Start Webhook with Production Server
 def start_webhook():
     tg_app.add_handler(CommandHandler("start", start))
     tg_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, detect_fake_news))
@@ -133,7 +134,7 @@ def start_webhook():
 
     tg_app.bot.set_webhook(f"{WEBHOOK_URL}/{TELEGRAM_TOKEN}")
 
-    flask_app.run(host="0.0.0.0", port=8443)
+    serve(flask_app, host="0.0.0.0", port=8443)  # Use Waitress for production
 
 if __name__ == "__main__":
     start_webhook()
