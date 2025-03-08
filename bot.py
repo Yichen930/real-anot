@@ -104,7 +104,7 @@ async def report_false_positive(update: Update, context: CallbackContext) -> Non
     except (FileNotFoundError, json.JSONDecodeError):
         reports = []
 
-    reports.append(user_text)
+    reports.append(report_entry)
     
     with open(REPORTS_FILE, "w") as file:
         json.dump(reports, file, indent=4)
@@ -121,7 +121,7 @@ async def start(update: Update, context: CallbackContext) -> None:
 
 # Main function (runs webhook server without Flask)
 async def main():
-    app = Application.builder().token(TELEGRAM_TOKEN).build()
+    app = Application.builder().token(TELEGRAM_TOKEN).updater(None).build()
 
     # Add handlers
     app.add_handler(CommandHandler("start", start))
@@ -140,4 +140,4 @@ async def main():
     )
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
