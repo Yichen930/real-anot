@@ -30,7 +30,9 @@ if missing_vars:
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
-# Meme responses mapped to regex-detected categories (Updated with working URLs)
+REPORTS_FILE = "reports.json"
+
+# Meme responses mapped to regex-detected categories
 fake_news_keywords = {
     # 🔹 Conspiracy Theories
     r"\b(aliens?|UFO|extraterrestrial|area[\s-]?51|reptilian|illuminati|new[\s-]?world[\s-]?order|secret societies)\b": 
@@ -64,52 +66,50 @@ fake_news_keywords = {
         ("Clickbait & Fake News", "https://i.imgflip.com/30b1gx.jpg", "😆 Clickbait title: 'Scientists HATE this simple trick!'"),
 }
 
-# Detect fake news using regex + AI analysis
+# Handle fake news detection
 async def detect_fake_news(update: Update, context: CallbackContext) -> None:
     text = update.message.text.lower()
 
-    for pattern, (category, meme_url) in fake_news_keywords.items():
+    for pattern, (category, meme_url, caption) in fake_news_keywords.items():
         if re.search(pattern, text, re.IGNORECASE):
-            try:
-                await update.message.reply_photo(photo=meme_url, caption=f"🧠 **Category:** {category}")
-            except Exception as e:
-                await update.message.reply_text(f"⚠️ Error sending meme. **Category:** {category}")
-                logging.error(f"Error sending meme for '{text}': {e}")
-
+            await update.message.reply_photo(photo=meme_url, caption=f"🧠 **Category:** {category}\n\n{caption}")
             return
 
     await update.message.reply_text("✅ No fake news category detected.")
 
-# Error handling
-async def error_handler(update: object, context: CallbackContext) -> None:
-    logging.error(f"Update {update} caused error {context.error}")
+# Handle reporting of incorrect classifications
+async def report_false_positive(update: Update, context: CallbackContext) -> None:
+    user_text = " ".join(context.args)
+    
+    if not user_text:
+        await update.message.reply_text("⚠️ Please provide the misclassified statement. Example:\n/report The government is hiding UFOs!")
+        return
+
+    try:
+        with open(REPORTS_FILE, "r") as file:
+            reports = json.load(file)
+    except (FileNotFoundError, json.JSONDecodeError):
+        reports = []
+
+    reports.append(user_text)
+    
+    with open(REPORTS_FILE, "w") as file:
+        json.dump(reports, file, indent=4)
+
+    await update.message.reply_text("✅ Thank you! Your report has been logged.")
 
 # Telegram `/start` command
 async def start(update: Update, context: CallbackContext) -> None:
-    await update.message.reply_text(
-        "Welcome to the Fake News Meme Bot! 🤖\n"
-        "Send me a message, and I'll check if it's fake news."
-    )
+    await update.message.reply_text("Welcome to the Fake News Meme Bot! 🤖")
 
-# Main function (runs webhook server without Flask)
+# Main function
 def main():
     app = Application.builder().token(TELEGRAM_TOKEN).build()
-
-    # Add handlers
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, detect_fake_news))
-    app.add_error_handler(error_handler)
-
-    # Set Webhook
+    app.add_handler(CommandHandler("report", report_false_positive))
     app.bot.set_webhook(f"{WEBHOOK_URL}/{TELEGRAM_TOKEN}")
-
-    # Run webhook server
-    app.run_webhook(
-        listen="0.0.0.0",
-        port=8443,
-        url_path=TELEGRAM_TOKEN,
-        webhook_url=f"{WEBHOOK_URL}/{TELEGRAM_TOKEN}"
-    )
+    app.run_webhook(listen="0.0.0.0", port=8443, url_path=TELEGRAM_TOKEN, webhook_url=f"{WEBHOOK_URL}/{TELEGRAM_TOKEN}")
 
 if __name__ == "__main__":
     main()
