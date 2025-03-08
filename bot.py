@@ -30,35 +30,37 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 # Meme responses mapped to regex-detected categories
 fake_news_keywords = {
     # 🔹 Conspiracy Theories
-    r"\b(aliens?|UFO|extraterrestrial|area[\s-]?51|reptilian|illuminati|new[\s-]?world[\s-]?order)\b": 
-        ("Conspiracy Theory", "https://i.imgflip.com/1bij.jpg"),
-    r"\b(government secret|deep[\s-]?state|hidden[\s-]?agenda|they don'?t want you to know|cover[\s-]?up|black[\s-]?ops|elites are controlling us)\b": 
-        ("Conspiracy Theory", "https://i.imgflip.com/4t0m5.jpg"),
+    r"\b(aliens?|UFO|extraterrestrial|area[\s-]?51|reptilian|illuminati|new[\s-]?world[\s-]?order|secret societies)\b": 
+        ("Conspiracy Theory", "https://i.imgflip.com/6ncq0g.jpg"),  # New Meme URL
 
-    # 🔹 Fake Health News (Expanded detection)
-    r"\b(vaccines? (cause|lead to|are linked to) autism|anti[\s-]?vax|vaccine[\s-]?hoax|big[\s-]?pharma is lying|natural[\s-]?medicine is better than|essential oils cure everything|fluoride is dangerous|detox can remove toxins|miracle cure|doctors are lying|homeopathy works)\b": 
-        ("Fake Health News", "https://i.imgflip.com/26am.jpg"),
+    r"\b(government secret|deep[\s-]?state|hidden[\s-]?agenda|they don'?t want you to know|cover[\s-]?up|black[\s-]?ops|elites are controlling us|shadow government)\b": 
+        ("Conspiracy Theory", "https://i.imgflip.com/6ncq0t.jpg"),  # New Meme URL
 
-    # 🔹 AI-Generated Misinformation (Expanded)
-    r"\b(this video proves|AI generated|deepfake|fake video|too realistic to be fake|manipulated[\s-]?media|synthetic[\s-]?content|robotic behavior|faked footage|fake interview|this video is 100% real)\b": 
-        ("AI-Generated Misinformation", "https://i.imgflip.com/4c1p.jpg"),
+    # 🔹 Fake Health News
+    r"\b(vaccines? (cause|lead to|are linked to) autism|anti[\s-]?vax|vaccine[\s-]?hoax|big[\s-]?pharma is lying|natural[\s-]?medicine is better than|essential oils cure everything|fluoride is dangerous|detox can remove toxins|miracle cure|doctors are lying|homeopathy works|covid vaccine is dangerous)\b": 
+        ("Fake Health News", "https://i.imgflip.com/6ncq1p.jpg"),  # New Meme URL
 
-    # 🔹 Fake Science Claims (Expanded)
-    r"\b(quantum[\s-]?energy|frequencies|vibrations|5G is dangerous|radiation[\s-]?harm|electromagnetic[\s-]?weapon|waves affect the brain|phone signals cause cancer|scientists are hiding the truth|science is a lie)\b": 
-        ("Fake Science Claim", "https://i.imgflip.com/2h3r.jpg"),
+    # 🔹 AI-Generated Misinformation (Deepfake, Fake Videos)
+    r"\b(this video proves|AI generated|deepfake|fake video|too realistic to be fake|manipulated[\s-]?media|synthetic[\s-]?content|robotic behavior|faked footage|fake interview|this video is 100% real|politician is a robot|robot president|not human)\b": 
+        ("AI-Generated Misinformation", "https://i.imgflip.com/6nco1c.jpg"),  # New Meme URL
 
-    # 🔹 Political Misinformation (Expanded)
-    r"\b(fake[\s-]?news|biased[\s-]?media|propaganda|mainstream[\s-]?media is lying|rigged[\s-]?election|false[\s-]?flag|election fraud|corrupt politicians|media blackout|cover-up by officials)\b": 
-        ("Political Misinformation", "https://i.imgflip.com/3w7cva.jpg"),
+    # 🔹 Fake Science Claims (5G, Quantum Energy)
+    r"\b(quantum[\s-]?energy|frequencies|vibrations|5G is dangerous|radiation[\s-]?harm|electromagnetic[\s-]?weapon|waves affect the brain|phone signals cause cancer|scientists are hiding the truth|science is a lie|5G towers are harming people|microwave radiation|cell towers emit deadly radiation)\b": 
+        ("Fake Science Claim", "https://i.imgflip.com/6ncocc.jpg"),  # New Meme URL
 
-    # 🔹 Old News Reused (Expanded)
-    r"\b(breaking[\s-]?news|shocking[\s-]?discovery|you won'?t believe|history[\s-]?rewritten|exposed after years|from [0-9]{4}|old report|10 years ago today|rediscovered)\b": 
-        ("Old News Reused", "https://i.imgflip.com/39t1o.jpg"),
+    # 🔹 Political Misinformation (Election Fraud, Biased Media)
+    r"\b(fake[\s-]?news|biased[\s-]?media|propaganda|mainstream[\s-]?media is lying|rigged[\s-]?election|false[\s-]?flag|election fraud|corrupt politicians|media blackout|cover-up by officials|votes were changed|ballots disappeared|illegal voting)\b": 
+        ("Political Misinformation", "https://i.imgflip.com/6ncocz.jpg"),  # New Meme URL
 
-    # 🔹 Clickbait & Fake News (Expanded)
-    r"\b(scientists hate this|banned[\s-]?information|they don'?t want you to know|top[\s-]?secret[\s-]?files|hidden[\s-]?truth|wake up[\s-]?sheeple|shocking truth|forbidden knowledge|nobody is talking about this)\b": 
-        ("Clickbait & Fake News", "https://i.imgflip.com/30b1gx.jpg"),
+    # 🔹 Old News Reused (10-Year-Old News Reposted)
+    r"\b(breaking[\s-]?news|shocking[\s-]?discovery|you won'?t believe|history[\s-]?rewritten|exposed after years|from [0-9]{4}|old report|10 years ago today|rediscovered|found after decades|this resurfaced|this happened years ago)\b": 
+        ("Old News Reused", "https://i.imgflip.com/6ncq2h.jpg"),  # New Meme URL
+
+    # 🔹 Clickbait & Fake News ("You won’t believe this!")
+    r"\b(scientists hate this|banned[\s-]?information|they don'?t want you to know|top[\s-]?secret[\s-]?files|hidden[\s-]?truth|wake up[\s-]?sheeple|shocking truth|forbidden knowledge|nobody is talking about this|click here to find out|you won'?t believe|secret discovery|massive coverup|mystery solved|revealed at last)\b": 
+        ("Clickbait & Fake News", "https://i.imgflip.com/6ncp0x.jpg"),  # New Meme URL
 }
+
 
 
 REPORTS_FILE = "reports.json"
