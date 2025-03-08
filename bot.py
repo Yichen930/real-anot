@@ -19,7 +19,12 @@ if not OPENAI_API_KEY:
     raise ValueError("Missing OPENAI_API_KEY environment variable!")
 
 # Set up OpenAI API
-client = openai.OpenAI(api_key=OPENAI_API_KEY)
+OPENAI_API_URL = os.getenv("OPENAI_API_URL")
+
+client = openai.OpenAI(
+    api_key=OPENAI_API_KEY,
+    base_url=OPENAI_API_URL 
+)
 
 # 🔹 Define Fake News Keywords and Responses (Verified Meme Links)
 fake_news_keywords = {
