@@ -76,13 +76,13 @@ async def analyze_news_with_ai(text):
 async def detect_fake_news(update: Update, context: CallbackContext) -> None:
     text = update.message.text.lower()
 
-    for pattern, (category, meme_url) in fake_news_keywords.items():
+    ai_analysis = await analyze_news_with_ai(text)
+
+    for pattern, (category, meme_url, caption) in fake_news_keywords.items():
         if re.search(pattern, text, re.IGNORECASE):
-            ai_analysis = await analyze_news_with_ai(text)
-            await update.message.reply_photo(photo=meme_url, caption=f"🧠 **Category:** {category}\n\n{ai_analysis}")
+            await update.message.reply_photo(photo=meme_url, caption=f"🧠 **Category:** {category}\n\n{ai_analysis}\n\n{caption}")
             return
 
-    ai_analysis = await analyze_news_with_ai(text)
     await update.message.reply_text(f"✅ No fake news category detected.\n\n🧠 AI Analysis:\n{ai_analysis}")
 
 # Allow users to report misclassifications
@@ -124,10 +124,10 @@ def main():
     app.add_handler(CommandHandler("report", report_false_positive))
 
     # Set Webhook
-    app.bot.set_webhook(f"{WEBHOOK_URL}/{TELEGRAM_TOKEN}")
+   await app.bot.set_webhook(f"{WEBHOOK_URL}/{TELEGRAM_TOKEN}")
 
     # Run webhook server
-    app.run_webhook(
+    await app.run_webhook(
         listen="0.0.0.0",
         port=8443,
         url_path=TELEGRAM_TOKEN,
