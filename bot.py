@@ -78,7 +78,7 @@ fake_news_keywords = {
 async def check_fake_news_with_openai(text):
     try:
         response = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": f"Is the following statement misinformation? Provide a short explanation:\n{text}"}]
         )
         return response.choices[0].message.content
