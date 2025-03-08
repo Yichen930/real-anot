@@ -73,29 +73,30 @@ fake_news_keywords = {
     },
 }
 
-# 🔹 Function to Check with Custom AI API
+from openai import OpenAI  # ✅ 使用 OpenAI 官方 SDK
+
+# 🔹 初始化 OpenAI 客户端
+client = OpenAI(
+    base_url=os.getenv("OPENAI_API_URL"),  # 你的 API URL
+    api_key=os.getenv("OPENAI_API_KEY")   # 你的 API Key
+)
+
 async def check_fake_news_with_api(text):
     try:
-        headers = {
-            "Authorization": f"Bearer {OPENAI_API_KEY}",
-            "Content-Type": "application/json"
-        }
-        payload = {
-            "model": "gpt-3.5-turbo",  # Adjust this based on your API provider
-            "messages": [{"role": "user", "content": f"Is the following statement misinformation? Provide a short explanation:\n{text}"}]
-        }
+        # ✅ 发送请求给 OpenAI
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",  # 你用的 API 可能不需要这个字段
+            messages=[{"role": "user", "content": f"Is the following statement misinformation? Provide a short explanation:\n{text}"}],
+            temperature=0.7
+        )
 
-        response = requests.post(OPENAI_API_URL, json=payload, headers=headers)
-        response_json = response.json()
-
-        if "choices" in response_json and response_json["choices"]:
-            return response_json["choices"][0]["message"]["content"]
-        else:
-            return "⚠️ AI analysis failed. The response was unexpected."
+        # ✅ 解析 OpenAI API 返回的文本
+        return response.choices[0].message.content
 
     except Exception as e:
         logging.error(f"Custom API error: {e}")
-        return "⚠️ Error retrieving AI analysis."
+        return f"⚠️ Error retrieving AI analysis: {str(e)}"
+
 
 # 🔹 Function to Detect Fake News and Get AI Feedback
 async def detect_fake_news(update: Update, context: CallbackContext) -> None:
