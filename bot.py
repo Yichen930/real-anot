@@ -19,7 +19,7 @@ if not OPENAI_API_KEY:
     raise ValueError("Missing OPENAI_API_KEY environment variable!")
 
 # Set up OpenAI API
-openai.api_key = OPENAI_API_KEY
+client = openai.OpenAI(api_key=OPENAI_API_KEY)
 
 # 🔹 Define Fake News Keywords and Responses (Verified Meme Links)
 fake_news_keywords = {
@@ -74,14 +74,14 @@ fake_news_keywords = {
     },
 }
 
-# 🔹 Function to Check with OpenAI
+# 🔹 Function to Check with OpenAI (Updated for v1 API)
 async def check_fake_news_with_openai(text):
     try:
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-4",
             messages=[{"role": "user", "content": f"Is the following statement misinformation? Provide a short explanation:\n{text}"}]
         )
-        return response["choices"][0]["message"]["content"]
+        return response.choices[0].message.content
     except Exception as e:
         logging.error(f"OpenAI API error: {e}")
         return "⚠️ Error retrieving AI analysis."
@@ -132,9 +132,8 @@ def main():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, detect_fake_news))
     app.add_error_handler(error_handler)
 
-    # Use Webhooks instead of Polling
-    WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # Add this to your Render environment variables
-    app.run_webhook(listen="0.0.0.0", port=8443, url_path=TELEGRAM_TOKEN, webhook_url=f"{WEBHOOK_URL}/{TELEGRAM_TOKEN}")
+    # Run Bot
+    app.run_polling()
 
 if __name__ == "__main__":
     main()
