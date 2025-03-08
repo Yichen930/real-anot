@@ -9,10 +9,7 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
 
 # Enable logging
-logging.basicConfig(
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    level=logging.INFO
-)
+logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
 
 # Load environment variables
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -30,54 +27,77 @@ if missing_vars:
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
-REPORTS_FILE = "reports.json"
-
 # Meme responses mapped to regex-detected categories
 fake_news_keywords = {
     # 🔹 Conspiracy Theories
-    r"\b(aliens?|UFO|extraterrestrial|area[\s-]?51|reptilian|illuminati|new[\s-]?world[\s-]?order|secret societies)\b": 
-        ("Conspiracy Theory", "https://i.imgflip.com/2h3r.jpg", "⚠️ So… aliens are responsible for this too? 👽"),
-    
-    r"\b(government secret|deep[\s-]?state|hidden[\s-]?agenda|they don'?t want you to know|cover[\s-]?up|black[\s-]?ops|elites are controlling us|shadow government)\b": 
-        ("Conspiracy Theory", "https://i.imgflip.com/4t0m5.jpg", "🚨 Ah yes, another 'they don’t want you to know this' moment. 😏"),
+    r"\b(aliens?|UFO|extraterrestrial|area[\s-]?51|reptilian|illuminati|new[\s-]?world[\s-]?order|secret societies|ancient aliens|lizard people)\b": 
+        ("Conspiracy Theory", "https://i.imgflip.com/6ncq0g.jpg", "👽 So… aliens did this too? Classic!"),
+
+    r"\b(government secret|deep[\s-]?state|hidden[\s-]?agenda|they don'?t want you to know|cover[\s-]?up|black[\s-]?ops|elites are controlling us|shadow government|secret documents leaked)\b": 
+        ("Conspiracy Theory", "https://i.imgflip.com/6ncq0t.jpg", "🚨 Another 'They don't want you to know this' moment. 🤔"),
 
     # 🔹 Fake Health News
-    r"\b(vaccines? (cause|lead to|are linked to) autism|anti[\s-]?vax|vaccine[\s-]?hoax|big[\s-]?pharma is lying|natural[\s-]?medicine is better than|essential oils cure everything|fluoride is dangerous|detox can remove toxins|miracle cure|doctors are lying|homeopathy works|covid vaccine is dangerous)\b": 
-        ("Fake Health News", "https://i.imgflip.com/26am.jpg", "🧐 Oh, you have a PhD in WhatsApp Forwarding?"),
+    r"\b(vaccines? (cause|lead to|are linked to) autism|anti[\s-]?vax|vaccine[\s-]?hoax|big[\s-]?pharma is lying|natural[\s-]?medicine is better than|essential oils cure everything|fluoride is dangerous|detox can remove toxins|miracle cure|doctors are lying|homeopathy works|covid vaccine is dangerous|miracle supplement|healing frequencies)\b": 
+        ("Fake Health News", "https://i.imgflip.com/6ncq1p.jpg", "🧐 Oh, you have a PhD in WhatsApp Forwarding?"),
 
     # 🔹 AI-Generated Misinformation
-    r"\b(this video proves|AI generated|deepfake|fake video|too realistic to be fake|manipulated[\s-]?media|synthetic[\s-]?content|robotic behavior|faked footage|fake interview|this video is 100% real|politician is a robot|robot president|not human)\b": 
-        ("AI-Generated Misinformation", "https://i.imgflip.com/5z1hsc.jpg", "🤔 This looks AI-generated… because it is."),
+    r"\b(this video proves|AI generated|deepfake|fake video|too realistic to be fake|manipulated[\s-]?media|synthetic[\s-]?content|robotic behavior|faked footage|fake interview|this video is 100% real|politician is a robot|robot president|not human|CGI proof)\b": 
+        ("AI-Generated Misinformation", "https://i.imgflip.com/6nco1c.jpg", "🤖 This AI-generated content looks… suspicious."),
 
     # 🔹 Fake Science Claims
-    r"\b(quantum[\s-]?energy|frequencies|vibrations|5G is dangerous|radiation[\s-]?harm|electromagnetic[\s-]?weapon|waves affect the brain|phone signals cause cancer|scientists are hiding the truth|science is a lie|5G towers are harming people|microwave radiation|cell towers emit deadly radiation)\b": 
-        ("Fake Science Claim", "https://i.imgflip.com/6ncocc.jpg", "🧠 This post used 'quantum' and 'frequencies,' so it must be legit?"),
+    r"\b(quantum[\s-]?energy|frequencies|vibrations|5G is dangerous|radiation[\s-]?harm|electromagnetic[\s-]?weapon|waves affect the brain|phone signals cause cancer|scientists are hiding the truth|science is a lie|5G towers are harming people|microwave radiation|cell towers emit deadly radiation|crystal healing|energy fields)\b": 
+        ("Fake Science Claim", "https://i.imgflip.com/6ncocc.jpg", "🧠 'Quantum' and 'frequencies' = must be real science, right?"),
 
     # 🔹 Political Misinformation
-    r"\b(fake[\s-]?news|biased[\s-]?media|propaganda|mainstream[\s-]?media is lying|rigged[\s-]?election|false[\s-]?flag|election fraud|corrupt politicians|media blackout|cover-up by officials|votes were changed|ballots disappeared|illegal voting)\b": 
-        ("Political Misinformation", "https://i.imgflip.com/3w7cva.jpg", "🤨 You sure this isn’t propaganda disguised as 'news'?"),
+    r"\b(fake[\s-]?news|biased[\s-]?media|propaganda|mainstream[\s-]?media is lying|rigged[\s-]?election|false[\s-]?flag|election fraud|corrupt politicians|media blackout|cover-up by officials|votes were changed|ballots disappeared|illegal voting|stolen election|voter manipulation)\b": 
+        ("Political Misinformation", "https://i.imgflip.com/6ncocz.jpg", "🤨 Are you sure this isn’t propaganda?"),
 
     # 🔹 Old News Reused
-    r"\b(breaking[\s-]?news|shocking[\s-]?discovery|you won'?t believe|history[\s-]?rewritten|exposed after years|from [0-9]{4}|old report|10 years ago today|rediscovered|found after decades|this resurfaced|this happened years ago)\b": 
-        ("Old News Reused", "https://i.imgflip.com/39t1o.jpg", "😂 BREAKING: This event happened… 10 years ago."),
+    r"\b(breaking[\s-]?news|shocking[\s-]?discovery|you won'?t believe|history[\s-]?rewritten|exposed after years|from [0-9]{4}|old report|10 years ago today|rediscovered|found after decades|this resurfaced|this happened years ago|historical coverup|resurfaced documents)\b": 
+        ("Old News Reused", "https://i.imgflip.com/6ncq2h.jpg", "😂 BREAKING: This event happened… a decade ago."),
 
     # 🔹 Clickbait & Fake News
-    r"\b(scientists hate this|banned[\s-]?information|they don'?t want you to know|top[\s-]?secret[\s-]?files|hidden[\s-]?truth|wake up[\s-]?sheeple|shocking truth|forbidden knowledge|nobody is talking about this|click here to find out|you won'?t believe|secret discovery|massive coverup|mystery solved|revealed at last)\b": 
-        ("Clickbait & Fake News", "https://i.imgflip.com/30b1gx.jpg", "😆 Clickbait title: 'Scientists HATE this simple trick!'"),
+    r"\b(scientists hate this|banned[\s-]?information|they don'?t want you to know|top[\s-]?secret[\s-]?files|hidden[\s-]?truth|wake up[\s-]?sheeple|shocking truth|forbidden knowledge|nobody is talking about this|click here to find out|you won'?t believe|secret discovery|massive coverup|mystery solved|revealed at last|exposed truth|insider information)\b": 
+        ("Clickbait & Fake News", "https://i.imgflip.com/6ncp0x.jpg", "😆 Clickbait alert! 'Scientists HATE this one trick!'"),
 }
 
-# Handle fake news detection
+REPORTS_FILE = "reports.json"
+
+# AI analyzes the text but does not pick the category
+async def analyze_news_with_ai(text):
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": 
+                    "You are a fact-checking assistant. "
+                    "Analyze the following text and provide a brief analysis of whether it contains misinformation or exaggerations."
+                    "Do NOT categorize it—just provide a factual analysis."},
+                {"role": "user", "content": text}
+            ],
+            temperature=0.5
+        )
+
+        return response.choices[0].message.content.strip()
+
+    except Exception as e:
+        logging.error(f"❌ OpenAI API Error: {e}")
+        return "⚠️ Error retrieving AI analysis."
+
+# Detect fake news using regex + AI analysis
 async def detect_fake_news(update: Update, context: CallbackContext) -> None:
     text = update.message.text.lower()
 
-    for pattern, (category, meme_url, caption) in fake_news_keywords.items():
+    for pattern, (category, meme_url) in fake_news_keywords.items():
         if re.search(pattern, text, re.IGNORECASE):
-            await update.message.reply_photo(photo=meme_url, caption=f"🧠 **Category:** {category}\n\n{caption}")
+            ai_analysis = await analyze_news_with_ai(text)
+            await update.message.reply_photo(photo=meme_url, caption=f"🧠 **Category:** {category}\n\n{ai_analysis}")
             return
 
-    await update.message.reply_text("✅ No fake news category detected.")
+    ai_analysis = await analyze_news_with_ai(text)
+    await update.message.reply_text(f"✅ No fake news category detected.\n\n🧠 AI Analysis:\n{ai_analysis}")
 
-# Handle reporting of incorrect classifications
+# Allow users to report misclassifications
 async def report_false_positive(update: Update, context: CallbackContext) -> None:
     user_text = " ".join(context.args)
     
@@ -100,16 +120,31 @@ async def report_false_positive(update: Update, context: CallbackContext) -> Non
 
 # Telegram `/start` command
 async def start(update: Update, context: CallbackContext) -> None:
-    await update.message.reply_text("Welcome to the Fake News Meme Bot! 🤖")
+    await update.message.reply_text(
+        "Welcome to the Fake News Meme Bot! 🤖\n"
+        "Send me a message, and I'll check if it's fake news.\n"
+        "Use /report <message> if you find an incorrect classification."
+    )
 
-# Main function
+# Main function (runs webhook server without Flask)
 def main():
     app = Application.builder().token(TELEGRAM_TOKEN).build()
+
+    # Add handlers
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, detect_fake_news))
     app.add_handler(CommandHandler("report", report_false_positive))
+
+    # Set Webhook
     app.bot.set_webhook(f"{WEBHOOK_URL}/{TELEGRAM_TOKEN}")
-    app.run_webhook(listen="0.0.0.0", port=8443, url_path=TELEGRAM_TOKEN, webhook_url=f"{WEBHOOK_URL}/{TELEGRAM_TOKEN}")
+
+    # Run webhook server
+    app.run_webhook(
+        listen="0.0.0.0",
+        port=8443,
+        url_path=TELEGRAM_TOKEN,
+        webhook_url=f"{WEBHOOK_URL}/{TELEGRAM_TOKEN}"
+    )
 
 if __name__ == "__main__":
     main()
