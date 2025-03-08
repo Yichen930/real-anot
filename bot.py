@@ -12,16 +12,21 @@ from flask import Flask, request
 # Enable logging
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
 
-# Environment variables
+# Load environment variables
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-OPENAI_API_URL = os.getenv("OPENAI_API_URL")  # Your custom API URL
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 
-if not TELEGRAM_TOKEN or not OPENAI_API_KEY or not OPENAI_API_URL or not WEBHOOK_URL:
-    raise ValueError("❌ Missing required environment variables!")
+# Debugging: Check missing environment variables
+missing_vars = []
+if not TELEGRAM_TOKEN: missing_vars.append("TELEGRAM_BOT_TOKEN")
+if not OPENAI_API_KEY: missing_vars.append("OPENAI_API_KEY")
+if not WEBHOOK_URL: missing_vars.append("WEBHOOK_URL")
 
-client = OpenAI(base_url=OPENAI_API_URL, api_key=OPENAI_API_KEY)
+if missing_vars:
+    raise ValueError(f"❌ Missing required environment variables: {', '.join(missing_vars)}")
+
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 # Trusted news sources
 TRUSTED_SOURCES = [
@@ -41,7 +46,7 @@ TRUSTED_SOURCES = [
     "scmp.com", "japantimes.co.jp", "koreatimes.co.kr"
 ]
 
-# Faster regex-based meme detection
+# Fake news detection keywords (Regex-based, fast)
 fake_news_keywords = {
     r"\b(aliens?|UFO|extraterrestrial|area[\s-]?51|reptilian|illuminati|new[\s-]?world[\s-]?order)\b": "https://i.imgflip.com/1bij.jpg",
     r"\b(government secret|deep[\s-]?state|hidden[\s-]?agenda|they don'?t want you to know|cover[\s-]?up|black[\s-]?ops)\b": "https://i.imgflip.com/4t0m5.jpg",
@@ -54,26 +59,20 @@ fake_news_keywords = {
     r"\b(scientists hate this|banned[\s-]?information|they don'?t want you to know|top[\s-]?secret[\s-]?files|hidden[\s-]?truth|wake up[\s-]?sheeple)\b": "https://i.imgflip.com/30b1gx.jpg",
 }
 
-# Check if the source URL is from a trusted news provider
-def check_news_source(url):
-    parsed_url = urllib.parse.urlparse(url)
-    domain = parsed_url.netloc.replace("www.", "")
-    return domain in TRUSTED_SOURCES
-
 # AI-assisted fake news analysis
 async def check_fake_news_with_ai(text):
     try:
-        response = requests.post(
-            OPENAI_API_URL,
-            headers={"Authorization": f"Bearer {OPENAI_API_KEY}", "Content-Type": "application/json"},
-            json={"model": "gpt-4o", "messages": [{"role": "user", "content": f"Is this misinformation? {text}"}]}
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role": "user", "content": f"Is this misinformation? {text}"}],
+            temperature=0.7
         )
-        return response.json().get("choices", [{}])[0].get("message", {}).get("content", "⚠️ AI could not analyze this.")
+        return response.choices[0].message.content
     except Exception as e:
         logging.error(f"❌ OpenAI API Error: {e}")
         return "⚠️ Error retrieving AI analysis."
 
-# Detect fake news using regex (fast) + AI analysis
+# Detect fake news using regex + AI analysis
 async def detect_fake_news(update: Update, context: CallbackContext) -> None:
     text = update.message.text.lower()
 
@@ -97,7 +96,7 @@ tg_app = Application.builder().token(TELEGRAM_TOKEN).build()
 @flask_app.route(f"/{TELEGRAM_TOKEN}", methods=["POST"])
 async def webhook():
     update = Update.de_json(request.get_json(), tg_app.bot)
-    await tg_app.process_update(update)  # Fixed asyncio warning
+    await tg_app.process_update(update)
     return "OK"
 
 # Start Webhook
