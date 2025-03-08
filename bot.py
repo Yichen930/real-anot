@@ -3,6 +3,7 @@ import requests
 import logging
 import json
 import asyncio
+import re
 from openai import OpenAI
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
@@ -26,63 +27,63 @@ if missing_vars:
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
-# Meme responses mapped to AI-detected categories
-category_to_meme = {
-    "Conspiracy Theory": "https://i.imgflip.com/1bij.jpg",
-    "Fake Health News": "https://i.imgflip.com/26am.jpg",
-    "AI-Generated Misinformation": "https://i.imgflip.com/4c1p.jpg",
-    "Fake Science Claim": "https://i.imgflip.com/2h3r.jpg",
-    "Political Misinformation": "https://i.imgflip.com/3w7cva.jpg",
-    "Old News Reused": "https://i.imgflip.com/39t1o.jpg",
-    "Clickbait & Fake News": "https://i.imgflip.com/30b1gx.jpg",
+# Meme responses mapped to regex-detected categories
+fake_news_keywords = {
+    r"\b(aliens?|UFO|extraterrestrial|area[\s-]?51|reptilian|illuminati|new[\s-]?world[\s-]?order)\b": 
+        ("Conspiracy Theory", "https://i.imgflip.com/1bij.jpg"),
+    r"\b(government secret|deep[\s-]?state|hidden[\s-]?agenda|they don'?t want you to know|cover[\s-]?up|black[\s-]?ops)\b": 
+        ("Conspiracy Theory", "https://i.imgflip.com/4t0m5.jpg"),
+    r"\b(trust me, I'?m a doctor|miracle cure|big[\s-]?pharma|natural[\s-]?medicine|homeopathy|detox|superfood|cancer[\s-]?cure)\b": 
+        ("Fake Health News", "https://i.imgflip.com/26am.jpg"),
+    r"\b(I did my own research|essential oils|herbal remedy|anti[\s-]?vax|vaccine[\s-]?hoax|fluoride is dangerous)\b": 
+        ("Fake Health News", "https://i.imgflip.com/5g9o3h.jpg"),
+    r"\b(deepfake|AI generated|fake video|too realistic|manipulated[\s-]?media|synthetic[\s-]?content)\b": 
+        ("AI-Generated Misinformation", "https://i.imgflip.com/4c1p.jpg"),
+    r"\b(quantum[\s-]?energy|frequencies|vibrations|5G is dangerous|radiation[\s-]?harm|electromagnetic[\s-]?weapon)\b": 
+        ("Fake Science Claim", "https://i.imgflip.com/2h3r.jpg"),
+    r"\b(fake[\s-]?news|biased[\s-]?media|propaganda|mainstream[\s-]?media is lying|rigged[\s-]?election|false[\s-]?flag)\b": 
+        ("Political Misinformation", "https://i.imgflip.com/3w7cva.jpg"),
+    r"\b(breaking[\s-]?news|shocking[\s-]?discovery|you won'?t believe|history[\s-]?rewritten|exposed after years)\b": 
+        ("Old News Reused", "https://i.imgflip.com/39t1o.jpg"),
+    r"\b(scientists hate this|banned[\s-]?information|they don'?t want you to know|top[\s-]?secret[\s-]?files|hidden[\s-]?truth|wake up[\s-]?sheeple)\b": 
+        ("Clickbait & Fake News", "https://i.imgflip.com/30b1gx.jpg"),
 }
 
 REPORTS_FILE = "reports.json"
 
-# AI categorizes news into fake news types
-async def categorize_news_with_ai(text):
+# AI analyzes the text but does not pick the category
+async def analyze_news_with_ai(text):
     try:
         response = client.chat.completions.create(
             model="gpt-4o",
             messages=[
                 {"role": "system", "content": 
-                    "You are an expert fact-checker. "
-                    "Your job is to analyze the input and strictly classify it into one of these categories:\n"
-                    "1. Conspiracy Theory\n"
-                    "2. Fake Health News\n"
-                    "3. AI-Generated Misinformation\n"
-                    "4. Fake Science Claim\n"
-                    "5. Political Misinformation\n"
-                    "6. Old News Reused\n"
-                    "7. Clickbait & Fake News\n"
-                    "If it is real news or factual, reply with: 'Not Fake News'.\n"
-                    "Do NOT say 'Not Fake News' unless you are 100% sure the statement is factual and backed by evidence."},
+                    "You are a fact-checking assistant. "
+                    "Analyze the following text and provide a brief analysis of whether it contains misinformation or exaggerations."
+                    "Do NOT categorize it—just provide a factual analysis."},
                 {"role": "user", "content": text}
             ],
-            temperature=0.3  # Lower temperature for more consistent responses
+            temperature=0.5
         )
 
-        category = response.choices[0].message.content.strip()
-
-        if category in category_to_meme:
-            return category, category_to_meme[category]
-
-        return "Not Fake News", ""
+        return response.choices[0].message.content.strip()
 
     except Exception as e:
         logging.error(f"❌ OpenAI API Error: {e}")
-        return "Error analyzing news", ""
+        return "⚠️ Error retrieving AI analysis."
 
-# Detect fake news and send meme if applicable
+# Detect fake news using regex + AI analysis
 async def detect_fake_news(update: Update, context: CallbackContext) -> None:
     text = update.message.text.lower()
-    
-    category, meme_url = await categorize_news_with_ai(text)
-    
-    if category != "Not Fake News" and meme_url:
-        await update.message.reply_photo(photo=meme_url, caption=f"🧠 AI Analysis: This seems to be **{category}**.")
-    else:
-        await update.message.reply_text(f"✅ No fake news detected.\n\n🧠 AI Analysis: {category}")
+
+    for pattern, (category, meme_url) in fake_news_keywords.items():
+        if re.search(pattern, text, re.IGNORECASE):
+            ai_analysis = await analyze_news_with_ai(text)
+            await update.message.reply_photo(photo=meme_url, caption=f"🧠 **Category:** {category}\n\n{ai_analysis}")
+            return
+
+    ai_analysis = await analyze_news_with_ai(text)
+    await update.message.reply_text(f"✅ No fake news category detected.\n\n🧠 AI Analysis:\n{ai_analysis}")
 
 # Allow users to report misclassifications
 async def report_false_positive(update: Update, context: CallbackContext) -> None:
