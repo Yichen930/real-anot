@@ -1,12 +1,11 @@
 import os
 import requests
+import logging
+import json
+import asyncio
 from openai import OpenAI
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
-import logging
-import json
-from flask import Flask, request
-from waitress import serve  # Production-ready WSGI server
 
 # Enable logging
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
@@ -111,30 +110,25 @@ async def start(update: Update, context: CallbackContext) -> None:
         "Use /report <message> if you find an incorrect classification."
     )
 
-# Webhook for Telegram bot updates
-flask_app = Flask(__name__)
-tg_app = Application.builder().token(TELEGRAM_TOKEN).build()
+# Main function (runs webhook server without Flask)
+def main():
+    app = Application.builder().token(TELEGRAM_TOKEN).build()
 
-@flask_app.route(f"/{TELEGRAM_TOKEN}", methods=["POST"])
-def webhook():
-    try:
-        update = Update.de_json(request.get_json(), tg_app.bot)
-        tg_app.create_task(tg_app.process_update(update))  # Run the update in an async task
-        return "OK", 200
+    # Add handlers
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, detect_fake_news))
+    app.add_handler(CommandHandler("report", report_false_positive))
 
-    except Exception as e:
-        logging.error(f"❌ Webhook Error: {e}")
-        return "Webhook processing failed", 500
+    # Set Webhook
+    app.bot.set_webhook(f"{WEBHOOK_URL}/{TELEGRAM_TOKEN}")
 
-# Start Webhook with Production Server
-def start_webhook():
-    tg_app.add_handler(CommandHandler("start", start))
-    tg_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, detect_fake_news))
-    tg_app.add_handler(CommandHandler("report", report_false_positive))
-
-    tg_app.bot.set_webhook(f"{WEBHOOK_URL}/{TELEGRAM_TOKEN}")
-
-    serve(flask_app, host="0.0.0.0", port=8443)  # Use Waitress for production
+    # Run webhook server
+    app.run_webhook(
+        listen="0.0.0.0",
+        port=8443,
+        url_path=TELEGRAM_TOKEN,
+        webhook_url=f"{WEBHOOK_URL}/{TELEGRAM_TOKEN}"
+    )
 
 if __name__ == "__main__":
-    start_webhook()
+    main()
