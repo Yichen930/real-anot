@@ -1,30 +1,30 @@
 #real_anot.py
 import logging
 import os
-import re
+import tempfile
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
 from deepfake_detector import analyse_video
-from fake_news_checker import detect_fake_news, analyze_news_with_ai, classify_with_ai
+from fake_news_checker import detect_fake_news
 
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
-# Set up logging
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
 
-# Function to handle video messages
 async def handle_video(update: Update, context: CallbackContext) -> None:
     await update.message.reply_text("🔍 Processing video... Please wait.")
     video_file = await update.message.video.get_file()
-    video_path = "video.mp4"
-    await video_file.download_to_drive(video_path)
+    
+    with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as temp_video:
+        video_path = temp_video.name
+        await video_file.download(custom_path=video_path)
+    
     result = analyse_video(video_path)
     await update.message.reply_text(result)
-    os.remove(video_path)
+    
+    os.remove(video_path)  
 
-# Function to handle text messages (fake news detection)
-async def handle_fake_news(update, context):
-
+async def handle_fake_news(update: Update, context: CallbackContext) -> None:
     text = update.message.text.strip()
     await update.message.reply_text("🕵️ Analyzing text for fake news... Please wait.")
     
@@ -38,26 +38,28 @@ async def handle_fake_news(update, context):
     )
     if meme_url:
         response += f"🖼️ *Meme Example:* [View Meme]({meme_url})"
-
+    
     await update.message.reply_text(response, parse_mode="Markdown")
 
-
-
-# Function to start the bot
 async def start(update: Update, context: CallbackContext) -> None:
     await update.message.reply_text(
         "🤖 Welcome! I can help detect deepfakes, fake news, and check URL reliability.\n\n"
         "📹 Send a video to check for deepfakes.\n"
         "📰 Send a message to check for misinformation.\n"
         "🌐 Send a URL to verify its reliability.\n\n"
-        "Use /report <message> if you find an incorrect classification.")
+        "Use /report <message> if you find an incorrect classification."
+    )
 
-# Main function to run the bot
 def main():
-    app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+    if not TELEGRAM_TOKEN:
+        logging.error("TELEGRAM_BOT_TOKEN is missing. Please set the environment variable.")
+        return
+    
+    app = Application.builder().token(TELEGRAM_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.VIDEO, handle_video))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_fake_news))
+    
     logging.info("🤖 Bot is running...")
     app.run_polling()
 
