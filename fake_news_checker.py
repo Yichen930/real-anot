@@ -104,7 +104,7 @@ async def classify_with_ai(text):
 
         category = response.choices[0].message.content.strip()
 
-       category_map = {value[0]: (key, value[1], value[2]) for key, value in fake_news_keywords.items()}
+        category_map = {value[0]: (key, value[1], value[2]) for key, value in fake_news_keywords.items()}
 
 
         if category in fake_news_keywords:
