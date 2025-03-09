@@ -47,14 +47,16 @@ fake_news_keywords = {
     r"\b(the election (was|is) (rigged|stolen|manipulated) by (secret elites|deep state|globalists)|voter manipulation|illegal voting|stolen election)\b": 
         ("Political Misinformation", "https://misinforeview.hks.harvard.edu/wp-content/uploads/2021/08/fig1_new-1536x1384.png", "🤨 Are you sure this isn’t propaganda?"),
 
-    r"\b(breaking[\s-]?news[:!?]|shocking[\s-]?discovery|scientists discover(ed)? .* (years ago|in \d{4})|exposed after years)\b": 
+    r"\b(breaking[:!?]?\s*(scientists? (discover|found|identify|detect))|shocking discovery|scientists (discover|found) .* (years ago|in \d{4})|\(article from \d{4}\)|exposed after years)\b": 
         ("Old News Reused", "https://i.imgflip.com/39t1o.jpg", "😂 BREAKING: This event happened… a decade ago."),
 
-    r"\b(you won'?t believe (what|how|why) .* (just|recently)? (found|discovered|exposed|revealed|uncovered)|shocking discovery|hidden treasure|mystery solved|forbidden knowledge)\b": 
+    r"\b(you won'?t believe (what|how|why) .* (just|recently)? (found|discovered|exposed|revealed|uncovered|hidden) (under the ocean|in the jungle|in Antarctica|in space|in the desert|on an island|on the moon)|shocking discovery|hidden treasure|mystery solved|forbidden knowledge)\b": 
         ("Clickbait & Fake News", "https://i.imgflip.com/30b1gx.jpg", "😆 Clickbait alert! 'Scientists HATE this one trick!'"),
 
     r"\b(mainstream[\s-]?media (is|are) (lying|spreading propaganda|misleading|hiding the truth|fake)|fake[\s-]?news|biased[\s-]?media|media blackout|propaganda machine)\b": 
         ("Media Misinformation", "https://i.imgflip.com/4t0m5.jpg", "📰 The media must be lying again, right?"),
+
+
 }
 
 REPORTS_FILE = "reports.json"
