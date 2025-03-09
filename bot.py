@@ -91,9 +91,55 @@ async def detect_fake_news(update: Update, context: CallbackContext) -> None:
             ai_analysis = await analyze_news_with_ai(text)
             await update.message.reply_photo(photo=meme_url, caption=f"🧠 **Category:** {category}\n\n{response_text}\n\n{ai_analysis}")
             return
+    
+    ai_category, ai_meme_url, ai_response_text = await classify_with_ai(text)
 
     ai_analysis = await analyze_news_with_ai(text)
+    await update.message.reply_photo(
+        photo=ai_meme_url, 
+        caption=f"🧠 **AI-Detected Category:** {ai_category}\n\n{ai_response_text}\n\n{ai_analysis}"
+    )
+'''
+    ai_analysis = await analyze_news_with_ai(text)
     await update.message.reply_text(f"✅ No fake news category detected.\n\n🧠 AI Analysis:\n{ai_analysis}")
+ '''   
+async def classify_with_ai(text):
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": 
+                    "You are a misinformation detection assistant. "
+                    "Analyze the following text and classify it into one of these categories:\n\n"
+                    "1. Conspiracy Theory\n"
+                    "2. Fake Health News\n"
+                    "3. AI-Generated Misinformation\n"
+                    "4. Fake Science Claim\n"
+                    "5. Political Misinformation\n"
+                    "6. Old News Reused\n"
+                    "7. Clickbait & Fake News\n\n"
+                    "If the text does not fit any category, return 'Unknown'."
+                },
+                {"role": "user", "content": text}
+            ],
+            temperature=0.3
+        )
+
+        category = response.choices[0].message.content.strip()
+
+        if category in fake_news_keywords:
+            meme_url = fake_news_keywords[category][1]
+            response_text = fake_news_keywords[category][2]
+        else:
+            category = "Unknown"
+            meme_url = "https://i.imgflip.com/30b1gx.jpg"
+            response_text = "🤔 I couldn't classify this. Could you clarify?"
+
+        return category, meme_url, response_text
+
+    except Exception as e:
+        logging.error(f"❌ OpenAI API Error: {e}")
+        return "Error", "https://i.imgflip.com/30b1gx.jpg", "⚠️ AI Classification Failed."
 
 # Allow users to report misclassifications
 async def report_false_positive(update: Update, context: CallbackContext) -> None:
