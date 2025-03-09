@@ -7,7 +7,6 @@ from openai import OpenAI
 # Enable logging
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
 
-OPENAI_API_KEY ="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"
 if not OPENAI_API_KEY:
     raise ValueError("❌ Missing OPENAI_API_KEY environment variable")
 
