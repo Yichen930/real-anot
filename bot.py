@@ -79,7 +79,7 @@ async def detect_fake_news(update: Update, context: CallbackContext) -> None:
     for pattern, (category, meme_url, response_text) in fake_news_keywords.items():
         if re.search(pattern, text, re.IGNORECASE):
             ai_analysis = await analyze_news_with_ai(text)
-            await update.message.reply_photo(photo=meme_url, caption=f"🧠 **Category:** {category}\n\n{ai_analysis}")
+            await update.message.reply_photo(photo=meme_url, caption=f"🧠 **Category:** {category}\n\n{response_text}\n\n{ai_analysis}")
             return
 
     ai_analysis = await analyze_news_with_ai(text)
