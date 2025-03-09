@@ -7,10 +7,11 @@ from openai import OpenAI
 # Enable logging
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
 
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 if not OPENAI_API_KEY:
     raise ValueError("❌ Missing OPENAI_API_KEY environment variable")
 
-client = OpenAI(api_key=OPENAI_API_KEY)
+client = OpenAI()
 
 # Meme responses mapped to regex-detected categories
 fake_news_keywords = {
@@ -81,7 +82,7 @@ async def detect_fake_news(text):
 # Classify text into AI-detected categories
 async def classify_with_ai(text):
     try:
-        response = client.chat.completions.create(
+        response = client.chat_completions.create(
             model="gpt-4o",
             messages=[
                 {"role": "system", "content": 
@@ -103,9 +104,13 @@ async def classify_with_ai(text):
 
         category = response.choices[0].message.content.strip()
 
+       category_map = {value[0]: (key, value[1], value[2]) for key, value in fake_news_keywords.items()}
+
+
         if category in fake_news_keywords:
             meme_url = fake_news_keywords[category][1]
             response_text = fake_news_keywords[category][2]
+
         else:
             category = "Unknown"
             meme_url = "https://i.imgflip.com/30b1gx.jpg"
