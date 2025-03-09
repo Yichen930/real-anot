@@ -31,22 +31,30 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 fake_news_keywords = {
     r"\b(aliens?|UFO|extraterrestrial|area[\s-]?51|reptilian|illuminati|new[\s-]?world[\s-]?order)\b": 
         ("Conspiracy Theory", "https://i.imgflip.com/1bij.jpg", "👽 So… aliens did this too? Classic!"),
+    
     r"\b(government secret|deep[\s-]?state|hidden[\s-]?agenda|they don'?t want you to know|cover[\s-]?up|black[\s-]?ops)\b": 
         ("Conspiracy Theory", "https://i.imgflip.com/4t0m5.jpg", "🚨 Another 'They don't want you to know this' moment. 🤔"),
+    
     r"\b(trust me, I'?m a doctor|miracle cure|big[\s-]?pharma|natural[\s-]?medicine|homeopathy|detox|superfood|cancer[\s-]?cure)\b": 
         ("Fake Health News", "https://i.imgflip.com/26am.jpg", "🧐 Oh, you have a PhD in WhatsApp Forwarding?"),
-    r"\b(I did my own research|essential oils|herbal remedy|anti[\s-]?vax|vaccine[\s-]?hoax|fluoride is dangerous)\b": 
-        ("Fake Health News", "https://tse3.mm.bing.net/th?id=OIP.tpCX_jOlofnIWtIBdV4fOQHaGm&pid=Api.jpg", "🧐 Oh, you have a PhD in WhatsApp Forwarding?"),
-    r"\b(this video proves|AI generated|deepfake|fake video|too realistic to be fake|manipulated[\s-]?media|synthetic[\s-]?content|robotic behavior|faked footage|fake interview|this video is 100% real|politician is a robot|robot president|not human|CGI proof)\b": 
-        ("AI-Generated Misinformation", "https://s3.ifanr.com/wp-content/uploads/2023/03/po3.jpg!720", "🤖 This AI-generated content looks… suspicious."),
-    r"\b(quantum[\s-]?energy|frequencies|vibrations|5G is dangerous|radiation[\s-]?harm|electromagnetic[\s-]?weapon|waves affect the brain|phone signals cause cancer|scientists are hiding the truth|science is a lie|5G towers are harming people|microwave radiation|cell towers emit deadly radiation|crystal healing|energy fields)\b": 
+    
+    r"\b(vaccines? (cause|lead to|linked to) autism|anti[\s-]?vax|vaccine[\s-]?hoax|big[\s-]?pharma|doctors are lying)\b": 
+        ("Fake Health News", "https://i.imgflip.com/26am.jpg", "🧐 Oh, you have a PhD in WhatsApp Forwarding?"),
+
+    r"\b(5G (towers?|networks?) (are|is) (dangerous|making people sick|causing cancer)|radiation[\s-]?harm|electromagnetic[\s-]?weapon|phone signals cause cancer)\b": 
         ("Fake Science Claim", "https://blogs.prio.org/wp-content/uploads/2017/05/34079489601_0af732b619_k.jpg", "🧠 'Quantum' and 'frequencies' = must be real science, right?"),
-    r"\b(fake[\s-]?news|biased[\s-]?media|propaganda|mainstream[\s-]?media is lying|rigged[\s-]?election|false[\s-]?flag|election fraud|corrupt politicians|media blackout|cover-up by officials|votes were changed|ballots disappeared|illegal voting|stolen election|voter manipulation)\b": 
+
+    r"\b(the election (was|is) (rigged|stolen|manipulated) by (secret elites|deep state|globalists)|voter manipulation|illegal voting|stolen election)\b": 
         ("Political Misinformation", "https://misinforeview.hks.harvard.edu/wp-content/uploads/2021/08/fig1_new-1536x1384.png", "🤨 Are you sure this isn’t propaganda?"),
-    r"\b(breaking[\s-]?news|shocking[\s-]?discovery|you won'?t believe|history[\s-]?rewritten|exposed after years)\b": 
+
+    r"\b(breaking[\s-]?news[:!?]|shocking[\s-]?discovery|scientists discover(ed)? .* (years ago|in \d{4})|exposed after years)\b": 
         ("Old News Reused", "https://i.imgflip.com/39t1o.jpg", "😂 BREAKING: This event happened… a decade ago."),
-     r"\b(scientists hate this|banned[\s-]?information|they don'?t want you to know|top[\s-]?secret[\s-]?files|hidden[\s-]?truth|wake up[\s-]?sheeple|shocking truth|forbidden knowledge|nobody is talking about this|click here to find out|you won'?t believe|secret discovery|massive coverup|mystery solved|revealed at last|exposed truth|insider information)\b": 
+
+    r"\b(you won'?t believe (what|how|why) .* (just|recently)? (found|discovered|exposed|revealed|uncovered)|shocking discovery|hidden treasure|mystery solved|forbidden knowledge)\b": 
         ("Clickbait & Fake News", "https://i.imgflip.com/30b1gx.jpg", "😆 Clickbait alert! 'Scientists HATE this one trick!'"),
+
+    r"\b(mainstream[\s-]?media (is|are) (lying|spreading propaganda|misleading|hiding the truth|fake)|fake[\s-]?news|biased[\s-]?media|media blackout|propaganda machine)\b": 
+        ("Media Misinformation", "https://i.imgflip.com/4t0m5.jpg", "📰 The media must be lying again, right?"),
 }
 
 REPORTS_FILE = "reports.json"
