@@ -7,7 +7,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 from deepfake_detector import analyse_video
 from fake_news_checker import detect_fake_news, analyze_news_with_ai, classify_with_ai
 
-TELEGRAM_BOT_TOKEN = "7661066348:AAGg5mRhCFRagqjyswHRVDgtHEBuBqut5gw"
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
 # Set up logging
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
